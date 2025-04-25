@@ -335,6 +335,8 @@ function PureArtifact({
                     append={append}
                     className="bg-background dark:bg-muted"
                     setMessages={setMessages}
+                    useReasoning={false}
+                    setUseReasoning={() => {}}
                   />
                 </form>
               </div>
