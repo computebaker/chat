@@ -2,7 +2,8 @@
 
 import type { Attachment, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useLocalStorage } from 'usehooks-ts'; // Import useLocalStorage
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
@@ -15,6 +16,7 @@ import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
 import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
+import { useState } from 'react';
 
 export function Chat({
   id,
@@ -30,6 +32,11 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
+  // Use localStorage to persist the reasoning state
+  const [useReasoning, setUseReasoning] = useLocalStorage<boolean>(
+    'useReasoning', // Key for localStorage
+    false, // Default value
+  );
 
   const {
     messages,
@@ -43,7 +50,13 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, selectedChatModel: selectedChatModel },
+    body: {
+      id,
+      // Conditionally select model based on persisted state
+      selectedChatModel: useReasoning
+        ? 'chat-model-reasoning'
+        : selectedChatModel,
+    },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
@@ -83,6 +96,7 @@ export function Chat({
           reload={reload}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
+          useReasoning={useReasoning} // Pass persisted state down
         />
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
@@ -99,6 +113,8 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
+              useReasoning={useReasoning}
+              setUseReasoning={setUseReasoning}
             />
           )}
         </form>

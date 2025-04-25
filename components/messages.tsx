@@ -16,6 +16,7 @@ interface MessagesProps {
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  useReasoning: boolean;
 }
 
 function PureMessages({
@@ -26,6 +27,7 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+  useReasoning,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -56,7 +58,9 @@ function PureMessages({
 
       {status === 'submitted' &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === 'user' && (
+          <ThinkingMessage useReasoning={useReasoning} />
+        )}
 
       <div
         ref={messagesEndRef}
@@ -67,13 +71,13 @@ function PureMessages({
 }
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isArtifactVisible && nextProps.isArtifactVisible) return true;
+  if (prevProps.isArtifactVisible !== nextProps.isArtifactVisible) return false;
 
   if (prevProps.status !== nextProps.status) return false;
-  if (prevProps.status && nextProps.status) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
+  if (prevProps.useReasoning !== nextProps.useReasoning) return false;
 
   return true;
 });

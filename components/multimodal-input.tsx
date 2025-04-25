@@ -11,18 +11,17 @@ import {
   type Dispatch,
   type SetStateAction,
   type ChangeEvent,
-  memo,
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
-
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { ArrowUpIcon, PaperclipIcon, SparklesIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import { memo as reactMemo } from 'react';
 
 function PureMultimodalInput({
   chatId,
@@ -36,6 +35,8 @@ function PureMultimodalInput({
   setMessages,
   append,
   handleSubmit,
+  useReasoning,
+  setUseReasoning,
   className,
 }: {
   chatId: string;
@@ -49,6 +50,8 @@ function PureMultimodalInput({
   setMessages: UseChatHelpers['setMessages'];
   append: UseChatHelpers['append'];
   handleSubmit: UseChatHelpers['handleSubmit'];
+  useReasoning: boolean;
+  setUseReasoning: Dispatch<SetStateAction<boolean>>;
   className?: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -248,12 +251,16 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start items-center gap-2">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        <ReasoningButton
+          useReasoning={useReasoning}
+          setUseReasoning={setUseReasoning}
+        />
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === 'submitted' ? (
+        {(status === 'submitted' || status === 'streaming') ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton
@@ -266,17 +273,6 @@ function PureMultimodalInput({
     </div>
   );
 }
-
-export const MultimodalInput = memo(
-  PureMultimodalInput,
-  (prevProps, nextProps) => {
-    if (prevProps.input !== nextProps.input) return false;
-    if (prevProps.status !== nextProps.status) return false;
-    if (!equal(prevProps.attachments, nextProps.attachments)) return false;
-
-    return true;
-  },
-);
 
 function PureAttachmentsButton({
   fileInputRef,
@@ -301,7 +297,52 @@ function PureAttachmentsButton({
   );
 }
 
+// Use React.memo for component memoization.
+// It accepts a component and an optional comparison function.
+const memo: typeof reactMemo = reactMemo;
+
 const AttachmentsButton = memo(PureAttachmentsButton);
+
+// Reasoning Button Component
+function PureReasoningButton({
+  useReasoning,
+  setUseReasoning,
+}: {
+  useReasoning: boolean;
+  setUseReasoning: Dispatch<SetStateAction<boolean>>;
+}) {
+  // Force re-render when button is clicked
+  const [, forceUpdate] = useState({});
+
+  const handleReasoningToggle = (event: React.MouseEvent) => {
+    event.preventDefault();
+    // Update the reasoning state
+    setUseReasoning(!useReasoning);
+    // Force the component to re-render immediately
+    forceUpdate({});
+  };
+
+  return (
+    <Button
+      data-testid="reasoning-button"
+      className={cx(
+      'rounded-md p-[5px] h-fit flex items-center gap-0.5 text-sm min-w-0',
+      useReasoning
+        ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30 hover:bg-blue-500/30'
+        : 'dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200',
+      )}
+      onClick={handleReasoningToggle}
+      disabled={false}
+      variant="ghost"
+    >
+      <SparklesIcon size={12} />
+      <span className="px-0.5">Reasoning</span>
+    </Button>
+  );
+}
+
+// Don't memoize to ensure re-renders
+const ReasoningButton = PureReasoningButton;
 
 function PureStopButton({
   stop,
@@ -357,3 +398,28 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });
+
+// Ensure the main component is exported if it's intended to be used elsewhere
+export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) => {
+  // Use deep equality check for complex props like messages and attachments
+  // Customize this comparison logic based on performance needs and prop stability
+  return (
+    prevProps.chatId === nextProps.chatId &&
+    prevProps.input === nextProps.input &&
+    prevProps.status === nextProps.status &&
+    prevProps.stop === nextProps.stop &&
+    equal(prevProps.attachments, nextProps.attachments) &&
+    prevProps.setAttachments === nextProps.setAttachments &&
+    equal(prevProps.messages, nextProps.messages) &&
+    prevProps.setMessages === nextProps.setMessages &&
+    prevProps.append === nextProps.append &&
+    prevProps.handleSubmit === nextProps.handleSubmit &&
+    prevProps.useReasoning === nextProps.useReasoning &&
+    prevProps.setUseReasoning === nextProps.setUseReasoning &&
+    prevProps.className === nextProps.className
+  );
+});
+
+// Export the component with a display name for better debugging
+MultimodalInput.displayName = 'MultimodalInput';
+
