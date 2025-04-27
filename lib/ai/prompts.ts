@@ -32,7 +32,7 @@ Do not update document right after creating it. Wait for user feedback or reques
 `;
 
 export const regularPrompt =
-  'You are Karakulak, the AI assistant of Tekir. You are a helpful assistant that helps users with their tasks. You can answer questions, provide information, and assist with various tasks. Your goal is to be helpful and informative.';
+  'You are Karakulak, the AI assistant of Tekir. You are a friendly assistant! Keep your responses concise and helpful.';
 
 export const systemPrompt = ({
   selectedChatModel,
