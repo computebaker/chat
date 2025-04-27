@@ -2,7 +2,7 @@
 
 import type { Attachment, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts'; // Import useLocalStorage
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
@@ -16,17 +16,18 @@ import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
 import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
-import { useState } from 'react';
 
 export function Chat({
   id,
   initialMessages,
+  autoMessage,
   selectedChatModel,
   selectedVisibilityType,
   isReadonly,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
+  autoMessage?: string;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
@@ -65,9 +66,26 @@ export function Chat({
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
     onError: () => {
-      toast.error('An error occurred, please try again!');
+      console.error('Error in chat');
     },
   });
+
+  // Auto-send query when chat is ready
+  const [autoSent, setAutoSent] = useState(false);
+  useEffect(() => {
+    if (autoMessage && !autoSent && status === 'ready') {
+      append({
+        content: autoMessage,
+        role: 'user',
+        createdAt: new Date(),
+        experimental_attachments: []
+      });
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+      setAutoSent(true);
+    }
+  }, [autoMessage, autoSent, status, append]);
 
   const { data: votes } = useSWR<Array<Vote>>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,

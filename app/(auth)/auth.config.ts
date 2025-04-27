@@ -26,7 +26,10 @@ export const authConfig = {
 
       if (isOnChat) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+        // Redirect unauthenticated users, preserving original path and query
+        const returnUrl = nextUrl.pathname + nextUrl.search;
+        const loginUrl = new URL(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`, nextUrl as unknown as URL);
+        return Response.redirect(loginUrl);
       }
 
       if (isLoggedIn) {
