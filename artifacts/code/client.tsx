@@ -258,11 +258,11 @@ export const codeArtifact = new Artifact<'code', Metadata>({
     },
     {
       icon: <LogsIcon />,
-      description: 'Add logs',
+      description: 'Fix bugs',
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
-          content: 'Add logs to the code snippet for debugging',
+          content: 'Fix code in the code snippet that might cause errors or bugs.',
         });
       },
     },

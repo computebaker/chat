@@ -8,43 +8,63 @@ import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
 import Image from 'next/image';
 
-import { register, type RegisterActionState } from '../actions';
+import { 
+  sendVerification, type SendVerificationState,
+  checkVerification, type CheckVerificationState,
+} from '../actions';
+import Form from 'next/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/toast';
 
 export default function Page() {
   const router = useRouter();
 
   const [email, setEmail] = useState('');
-  const [isSuccessful, setIsSuccessful] = useState(false);
+  const [password, setPassword] = useState('');
 
-  const [state, formAction] = useActionState<RegisterActionState, FormData>(
-    register,
-    {
-      status: 'idle',
-    },
+  const [sendState, sendAction] = useActionState<SendVerificationState, FormData>(
+    sendVerification,
+    { status: 'idle' },
+  );
+  const [verifyState, verifyAction] = useActionState<CheckVerificationState, FormData>(
+    checkVerification,
+    { status: 'idle' },
   );
 
   useEffect(() => {
-    if (state.status === 'user_exists') {
-      toast({ type: 'error', description: 'Account already exists!' });
-    } else if (state.status === 'failed') {
-      toast({ type: 'error', description: 'Failed to create account!' });
-    } else if (state.status === 'invalid_data') {
-      toast({
-        type: 'error',
-        description: 'Failed validating your submission!',
-      });
-    } else if (state.status === 'success') {
-      toast({ type: 'success', description: 'Account created successfully!' });
-
-      setIsSuccessful(true);
-      router.refresh();
+    if (sendState.status === 'invalid_data') {
+      toast({ type: 'error', description: 'Invalid email or password' });
+    } else if (sendState.status === 'failed') {
+      toast({ type: 'error', description: 'Failed to send verification code' });
+    } else if (sendState.status === 'sent') {
+      toast({ type: 'success', description: 'Verification code sent' });
     }
-  }, [state]);
+  }, [sendState]);
+  useEffect(() => {
+    if (verifyState.status === 'wrong_code') {
+      toast({ type: 'error', description: 'Incorrect verification code' });
+    } else if (verifyState.status === 'invalid_data') {
+      toast({ type: 'error', description: 'Invalid data. Please try again' });
+    } else if (verifyState.status === 'failed') {
+      toast({ type: 'error', description: 'Verification failed. Please try again' });
+    } else if (verifyState.status === 'user_exists') {
+      toast({ type: 'error', description: 'Account already exists!' });
+    } else if (verifyState.status === 'success') {
+      toast({ type: 'success', description: 'Account created successfully!' });
+      router.push('/');
+    }
+  }, [verifyState]);
 
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get('email') as string);
-    formAction(formData);
+  const handleSend = (formData: FormData) => {
+    const e = formData.get('email') as string;
+    const p = formData.get('password') as string;
+    setEmail(e);
+    setPassword(p);
+    sendAction(formData);
+  };
+  const handleVerify = (formData: FormData) => {
+    verifyAction(formData);
   };
 
   return (
@@ -65,19 +85,45 @@ export default function Page() {
             Create an account to start using Tekir AI Chat
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
-          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
-            {'Already have an account? '}
-            <Link
-              href="/login"
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
-            >
-              Sign in
-            </Link>
-            {' instead.'}
-          </p>
-        </AuthForm>
+        {sendState.status !== 'sent' ? (
+          <AuthForm action={handleSend} defaultEmail={email}>
+            <SubmitButton isSuccessful={(sendState.status as any) === 'sent'}>
+              Send Code
+            </SubmitButton>
+            <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+              {'Already have an account? '}
+              <Link
+                href="/login"
+                className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              >
+                Sign in
+              </Link>
+              {' instead.'}
+            </p>
+          </AuthForm>
+        ) : (
+          <Form action={handleVerify} className="flex flex-col gap-4 px-4 sm:px-16">
+            <input type="hidden" name="email" value={email} />
+            <input type="hidden" name="password" value={password} />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="code" className="text-zinc-600 font-normal dark:text-zinc-400">
+                Verification Code
+              </Label>
+              <Input
+                id="code"
+                name="code"
+                type="text"
+                placeholder="12345"
+                required
+                pattern="\d{5}"
+                className="bg-muted text-md md:text-sm"
+              />
+            </div>
+            <SubmitButton isSuccessful={(verifyState.status as any) === 'success'}>
+              Verify Code
+            </SubmitButton>
+          </Form>
+        )}
       </div>
     </div>
   );
