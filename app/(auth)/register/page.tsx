@@ -16,6 +16,7 @@ import Form from 'next/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/toast';
+import { ChatAnimation } from '@/components/chat-animation';
 
 export default function Page() {
   const router = useRouter();
@@ -124,6 +125,9 @@ export default function Page() {
             </SubmitButton>
           </Form>
         )}
+      </div>
+      <div className="hidden lg:flex lg:w-full lg:max-w-md lg:ml-4">
+        <ChatAnimation />
       </div>
     </div>
   );

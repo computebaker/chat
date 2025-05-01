@@ -19,8 +19,8 @@ import { toast } from '@/components/toast';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
-
 import { login, type LoginActionState } from '../actions';
+import { ChatAnimation } from '@/components/chat-animation';
 
 function LoginClient() {
   const router = useRouter();
@@ -82,6 +82,9 @@ function LoginClient() {
             {' for free.'}
           </p>
         </AuthForm>
+      </div>
+      <div className="hidden lg:flex lg:w-full lg:max-w-md lg:ml-4">
+        <ChatAnimation />
       </div>
     </div>
   );
