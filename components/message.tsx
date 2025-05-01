@@ -255,7 +255,7 @@ export const ThinkingMessage = ({ useReasoning }: { useReasoning: boolean }) => 
       data-testid="message-assistant-loading"
       className="w-full mx-auto max-w-3xl px-4 group/message"
       initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 0.3 } }} // Reduced delay to appear more quickly
+      animate={{ y: 0, opacity: 1 }} // Removed transition delay
       data-role={role}
     >
       <div className="flex gap-4 w-full items-center">
@@ -269,7 +269,7 @@ export const ThinkingMessage = ({ useReasoning }: { useReasoning: boolean }) => 
           />
         </div>
 
-        <div className="flex flex-col gap-2 w-full animate-pulse">
+        <div className="flex flex-col gap-2 w-full">
           <div className={cx(
         "flex gap-2 items-center text-base font-medium",
         useReasoning ? "text-grey-500" : "text-muted-foreground"

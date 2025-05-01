@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ChevronDownIcon, LoaderIcon } from './icons';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Markdown } from './markdown';
 
 interface MessageReasoningProps {
@@ -11,68 +10,52 @@ interface MessageReasoningProps {
 }
 
 export function MessageReasoning({
-  isLoading,
+  isLoading, // Keep isLoading prop for potential future use, but don't use it for conditional rendering here
   reasoning,
 }: MessageReasoningProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const variants = {
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      marginTop: 0,
-      marginBottom: 0,
-    },
-    expanded: {
-      height: 'auto',
-      opacity: 1,
-      marginTop: '1rem',
-      marginBottom: '0.5rem',
-    },
-  };
+  // Log the reasoning prop to see its value during render
+  console.log('MessageReasoning rendering with reasoning:', reasoning);
 
   return (
     <div className="flex flex-col">
-      {isLoading ? (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoning</div>
+      {/* Always show the toggle header, regardless of isLoading */}
+      <div className="flex flex-row gap-2 items-center">
+        <div className="font-medium">Reasoning</div>
+        {/* Optionally show spinner if needed, but keep toggle visible */}
+        {isLoading && (
           <div className="animate-spin">
             <LoaderIcon />
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoned for a few seconds</div>
-          <button
-            data-testid="message-reasoning-toggle"
-            type="button"
-            className="cursor-pointer"
-            onClick={() => {
-              setIsExpanded(!isExpanded);
-            }}
-          >
+        )}
+        <button
+          data-testid="message-reasoning-toggle"
+          type="button"
+          className="cursor-pointer ml-auto" // Adjust positioning if needed
+          onClick={() => {
+            setIsExpanded(!isExpanded);
+          }}
+        >
+          <span className={`transition-transform duration-200 inline-block ${isExpanded ? '' : '-rotate-90'}`}>
             <ChevronDownIcon />
-          </button>
+          </span>
+        </button>
+      </div>
+
+      {/* Reasoning content area (simplified from previous step) */}
+      {isExpanded && (
+        <div
+          data-testid="message-reasoning"
+          style={{ overflow: 'hidden' }}
+          className="pl-4 text-zinc-600 dark:text-zinc-400 border-l flex flex-col gap-4 mt-4 mb-2"
+        >
+          {/* Temporarily use <pre> instead of <Markdown> */}
+          <pre style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+            {reasoning}
+          </pre>
         </div>
       )}
-
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            data-testid="message-reasoning"
-            key="content"
-            initial="collapsed"
-            animate="expanded"
-            exit="collapsed"
-            variants={variants}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-            className="pl-4 text-zinc-600 dark:text-zinc-400 border-l flex flex-col gap-4"
-          >
-            <Markdown>{reasoning}</Markdown>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

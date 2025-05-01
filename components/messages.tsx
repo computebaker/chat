@@ -56,7 +56,13 @@ function PureMessages({
         />
       ))}
 
-      {status === 'submitted' &&
+      {(status === 'submitted' ||
+        (status === 'streaming' &&
+          messages.length > 0 &&
+          messages[messages.length - 1].role === 'assistant' &&
+          messages[messages.length - 1].parts?.every(
+            (part) => part.type === 'reasoning',
+          ))) &&
         messages.length > 0 &&
         messages[messages.length - 1].role === 'user' && (
           <ThinkingMessage useReasoning={useReasoning} />
