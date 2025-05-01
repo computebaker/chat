@@ -5,7 +5,7 @@ import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
+import { DEFAULT_CHAT_PROVIDER } from '@/lib/ai/models';
 import { DBMessage } from '@/lib/db/schema';
 import { Attachment, UIMessage } from 'ai';
 
@@ -48,29 +48,16 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   }
 
   const cookieStore = await cookies();
-  const chatModelFromCookie = cookieStore.get('chat-model');
+  const providerIdFromCookie = cookieStore.get('chat-provider');
 
-  if (!chatModelFromCookie) {
-    return (
-      <>
-        <Chat
-          id={chat.id}
-          initialMessages={convertToUIMessages(messagesFromDb)}
-          selectedChatModel={DEFAULT_CHAT_MODEL}
-          selectedVisibilityType={chat.visibility}
-          isReadonly={session?.user?.id !== chat.userId}
-        />
-        <DataStreamHandler id={id} />
-      </>
-    );
-  }
+  const selectedProvider = providerIdFromCookie?.value ?? DEFAULT_CHAT_PROVIDER;
 
   return (
     <>
       <Chat
         id={chat.id}
         initialMessages={convertToUIMessages(messagesFromDb)}
-        selectedChatModel={chatModelFromCookie.value}
+        selectedChatProvider={selectedProvider}
         selectedVisibilityType={chat.visibility}
         isReadonly={session?.user?.id !== chat.userId}
       />

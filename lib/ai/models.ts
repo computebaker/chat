@@ -17,4 +17,36 @@ export const chatModels: Array<ChatModel> = [
     name: 'Reasoning model',
     description: 'Uses advanced reasoning',
   },
+  {
+    id: 'deepseek-chat',
+    name: 'Deepseek Chat',
+    description: 'Deepseek chat model',
+  },
+  {
+    id: 'deepseek-reasoning',
+    name: 'Deepseek Reasoning',
+    description: 'Deepseek reasoning model',
+  },
+];
+
+export const DEFAULT_CHAT_PROVIDER: string = 'openai';
+
+interface ChatProvider {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const chatProviders: Array<ChatProvider> = [
+  {
+    id: 'openai',
+    name: 'ChatGPT', 
+    description: 'Models from OpenAI',
+  },
+  {
+    id: 'deepseek',
+    name: 'Deepseek', 
+    description: 'Open source models from Deepseek',
+  },
+
 ];

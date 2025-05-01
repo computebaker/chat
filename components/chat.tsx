@@ -2,7 +2,7 @@
 
 import type { Attachment, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts'; // Import useLocalStorage
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
@@ -21,14 +21,14 @@ export function Chat({
   id,
   initialMessages,
   autoMessage,
-  selectedChatModel,
+  selectedChatProvider, // Renamed prop
   selectedVisibilityType,
   isReadonly,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
   autoMessage?: string;
-  selectedChatModel: string;
+  selectedChatProvider: string; // Renamed prop type
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
@@ -38,6 +38,19 @@ export function Chat({
     'useReasoning', // Key for localStorage
     false, // Default value
   );
+
+  // Determine the actual model ID based on provider and reasoning state
+  const selectedModelId = useMemo(() => {
+    if (useReasoning) {
+      return selectedChatProvider === 'deepseek'
+        ? 'deepseek-reasoning'
+        : 'chat-model-reasoning'; // Default reasoning for openai
+    } else {
+      return selectedChatProvider === 'deepseek'
+        ? 'deepseek-chat'
+        : 'chat-model'; // Default chat for openai
+    }
+  }, [selectedChatProvider, useReasoning]);
 
   const {
     messages,
@@ -53,10 +66,7 @@ export function Chat({
     id,
     body: {
       id,
-      // Conditionally select model based on persisted state
-      selectedChatModel: useReasoning
-        ? 'chat-model-reasoning'
-        : selectedChatModel,
+      selectedChatModel: selectedModelId, // Send the determined model ID
     },
     initialMessages,
     experimental_throttle: 100,
@@ -100,7 +110,7 @@ export function Chat({
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
           chatId={id}
-          selectedModelId={selectedChatModel}
+          selectedProviderId={selectedChatProvider} // Pass provider ID
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
         />

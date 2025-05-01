@@ -11,9 +11,9 @@ import {
 import { VisibilityType } from '@/components/visibility-selector';
 import { myProvider } from '@/lib/ai/providers';
 
-export async function saveChatModelAsCookie(model: string) {
+export async function saveChatProviderAsCookie(providerId: string) {
   const cookieStore = await cookies();
-  cookieStore.set('chat-model', model);
+  cookieStore.set('chat-provider', providerId);
 }
 
 export async function generateTitleFromUserMessage({
