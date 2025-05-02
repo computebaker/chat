@@ -62,20 +62,19 @@ export async function POST(request: Request) {
       await saveChat({ id, userId: session.user.id, title });
     } else {
       if (chat.userId !== session.user.id) {
-        return new Response('Forbidden', { status: 403 });
       }
     }
 
     await saveMessages({
       messages: [
-        {
-          chatId: id,
-          id: userMessage.id,
-          role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
-        },
+      {
+        chatId: id,
+        id: userMessage.id,
+        role: 'user',
+        parts: userMessage.parts,
+        attachments: userMessage.experimental_attachments ?? [],
+        createdAt: new Date(),
+      },
       ],
     });
 

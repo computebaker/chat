@@ -4,7 +4,7 @@ import { useCopyToClipboard } from 'usehooks-ts';
 
 import type { Vote } from '@/lib/db/schema';
 
-import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
+import { CopyIcon, ThumbDownIcon, ThumbUpIcon, InfoIcon, CrossIcon } from './icons';
 import { Button } from './ui/button';
 import {
   Tooltip,
@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from './ui/alert-dialog';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
 import { toast } from 'sonner';
@@ -23,7 +24,12 @@ export function PureMessageActions({
   isLoading,
 }: {
   chatId: string;
-  message: Message;
+  message: Message & {
+    provider?: string;
+    model?: string;
+    tokenCount?: number;
+    streamingTime?: number;
+  };
   vote: Vote | undefined;
   isLoading: boolean;
 }) {
@@ -168,6 +174,41 @@ export function PureMessageActions({
           </TooltipTrigger>
           <TooltipContent>Downvote Response</TooltipContent>
         </Tooltip>
+
+        {/* metadata dialog */}
+        <AlertDialog>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertDialogTrigger asChild>
+                <Button className="py-1 px-2 h-fit text-muted-foreground" variant="outline">
+                  <InfoIcon />
+                </Button>
+              </AlertDialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Show Metadata</TooltipContent>
+          </Tooltip>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="flex justify-between items-center">
+                <AlertDialogTitle>Message Metadata</AlertDialogTitle>
+                <AlertDialogCancel asChild>
+                  <button className="text-muted-foreground hover:text-foreground">
+                    <CrossIcon />
+                  </button>
+                </AlertDialogCancel>
+              </div>
+            </AlertDialogHeader>
+            <div className="space-y-2">
+              {([
+                ['Message ID', message.id],
+              ] as const).map(([label, value]) => (
+                <div key={label} className="flex justify-between items-center">
+                  <span>{label}: {value}</span>
+                </div>
+              ))}
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
