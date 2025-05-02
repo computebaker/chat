@@ -41,7 +41,7 @@ export const chatProviders: Array<ChatProvider> = [
   {
     id: 'openai',
     name: 'ChatGPT', 
-    description: 'Models from OpenAI',
+    description: 'Advanced models from OpenAI',
   },
   {
     id: 'deepseek',
