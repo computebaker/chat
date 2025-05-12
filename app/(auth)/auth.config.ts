@@ -21,13 +21,41 @@ export const authConfig = {
       }
 
       if (isOnRegister || isOnLogin) {
-        return true; // Always allow access to register and login pages
+        const callbackUrlParam = nextUrl.searchParams.get('callbackUrl');
+        if (callbackUrlParam) {
+          try {
+            const decodedCallbackUrl = decodeURIComponent(callbackUrlParam);
+            const url = new URL(decodedCallbackUrl, nextUrl.origin); // Use nextUrl.origin as base for relative URLs
+            if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+              return Response.redirect(new URL('/login', nextUrl as unknown as URL));
+            }
+            if (url.origin !== nextUrl.origin && !decodedCallbackUrl.startsWith('/')) {
+                return Response.redirect(new URL('/login', nextUrl as unknown as URL));
+            }
+          } catch (e) {
+            return Response.redirect(new URL('/login', nextUrl as unknown as URL));
+          }
+        }
+        return true;
       }
 
       if (isOnChat) {
         if (isLoggedIn) return true;
         // Redirect unauthenticated users, preserving original path and query
-        const returnUrl = nextUrl.pathname + nextUrl.search;
+        let returnUrl = nextUrl.pathname + nextUrl.search;
+        
+        // Validate the returnUrl before encoding and redirecting
+        try {
+          const url = new URL(returnUrl, nextUrl.origin);
+          if (url.protocol !== 'http:' && url.protocol !== 'https:' && !returnUrl.startsWith('/')) {
+            returnUrl = '/'; // Default to a safe path if invalid
+          } else if (url.origin !== nextUrl.origin && !returnUrl.startsWith('/')) {
+            returnUrl = '/'; // Default to a safe path if external and not explicitly relative
+          }
+        } catch (e) {
+          returnUrl = '/'; // Default to a safe path if parsing fails
+        }
+
         const loginUrl = new URL(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`, nextUrl as unknown as URL);
         return Response.redirect(loginUrl);
       }
