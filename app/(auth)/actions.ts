@@ -1,11 +1,7 @@
 'use server';
-
 import { z } from 'zod';
-
 import { createUser, getUser } from '@/lib/db/queries';
-
 import { signIn } from './auth';
-
 import Prelude from "@prelude.so/sdk";
 
 // initialize Prelude client with environment variable
@@ -96,16 +92,21 @@ export const sendVerification = async (
   _: SendVerificationState,
   formData: FormData
 ): Promise<SendVerificationState> => {
+  console.log('Attempting to send verification email...');
   try {
     const email = formData.get('email');
     if (typeof email !== 'string' || !email) {
+      console.log('Invalid data: Email is missing or not a string.');
       return { status: 'invalid_data' };
     }
+    console.log(`Sending verification to: ${email}`);
     await preludeClient.verification.create({
       target: { type: 'email_address', value: email },
     });
+    console.log(`Verification email sent successfully to: ${email}`);
     return { status: 'sent' };
   } catch (error) {
+    console.error('Failed to send verification email:', error);
     return { status: 'failed' };
   }
 };
@@ -125,6 +126,7 @@ export const checkVerification = async (
   _: CheckVerificationState,
   formData: FormData
 ): Promise<CheckVerificationState> => {
+  console.log('Attempting to check verification code...');
   try {
     const email = formData.get('email');
     const password = formData.get('password');
@@ -134,25 +136,39 @@ export const checkVerification = async (
       typeof password !== 'string' ||
       typeof code !== 'string'
     ) {
+      console.log('Invalid data: Email, password, or code is missing or not a string.');
       return { status: 'invalid_data' };
     }
-    // verify code
-    await preludeClient.verification.check({
+    console.log(`Checking verification for email: ${email} with code: ${code}`);
+    const verificationResult = await preludeClient.verification.check({
       target: { type: 'email_address', value: email },
       code,
     });
-    // create user and sign in
+
+    if (verificationResult.status === 'failure') {
+      console.log(`Verification check for email ${email} failed with status: ${verificationResult.status}. Code might be incorrect.`);
+      return { status: 'wrong_code' };
+    }
+
+    console.log(`Verification successful for email: ${email}`);
     const [existing] = await getUser(email);
     if (existing) {
+      console.log(`User already exists for email: ${email}`);
       return { status: 'user_exists' };
     }
+    console.log(`Creating user for email: ${email}`);
     await createUser(email, password);
+    console.log(`User created for email: ${email}. Signing in...`);
     await signIn('credentials', { email, password, redirect: false });
+    console.log(`Successfully signed in user: ${email}`);
     return { status: 'success' };
   } catch (error: any) {
+    console.error('Failed to check verification or create user:', error);
     if (error.code === 'VERIFICATION_CODE_MISMATCH') {
+      console.log('Verification code mismatch.');
       return { status: 'wrong_code' };
     }
     return { status: 'failed' };
   }
 };
+
