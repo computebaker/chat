@@ -114,9 +114,9 @@ export default function Page() {
                 id="code"
                 name="code"
                 type="text"
-                placeholder="12345"
+                placeholder="123456"
                 required
-                pattern="\d{5}"
+                pattern="\d{6}"
                 className="bg-muted text-md md:text-sm"
               />
             </div>
